@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Siemens Energy - Image Lookup</title>
+  <style>
+    body { margin: 0; font-family: "Segoe UI", sans-serif; background: #f4f4f4; }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 30px;
+      background-color: #fff;
+      border-bottom: 2px solid #ccc;
+    }
+    .logo {
+      font-size: 26px;
+      font-weight: bold;
+    }
+    .logo span:first-child { color: #00aec7; }
+    .logo span:last-child { color: #80298f; }
+    .plant-info {
+      text-align: right;
+    }
+    .plant-info div:first-child {
+      font-size: 20px;
+      font-weight: bold;
+      color: #222;
+    }
+    .plant-info div:last-child {
+      font-size: 14px;
+      color: #555;
+    }
+
+    #searchBox {
+      display: block;
+      margin: 20px auto;
+      padding: 10px;
+      width: 80%;
+      max-width: 400px;
+      font-size: 16px;
+      border: 2px solid #20254a;
+      border-radius: 6px;
+      outline: none;
+    }
+
+    #gallery {
+      column-count: 3;
+      column-gap: 12px;
+      padding: 20px;
+    }
+
+    .image-item {
+      break-inside: avoid;
+      margin-bottom: 12px;
+      transition: transform 0.3s ease;
+      cursor: pointer;
+    }
+
+    .image-item img {
+      width: 100%;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .image-item:hover {
+      transform: scale(1.02);
+    }
+
+    .no-results {
+      text-align: center;
+      color: #888;
+      margin-top: 40px;
+      font-size: 18px;
+    }
+
+    @media (max-width: 768px) { #gallery { column-count: 2; } }
+    @media (max-width: 480px) { #gallery { column-count: 1; } }
+
+    #lightbox {
+      display: none;
+      position: fixed;
+      z-index: 999;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.85);
+      justify-content: center;
+      align-items: center;
+    }
+
+    #lightbox img {
+      max-width: 90%;
+      max-height: 90%;
+      border: 4px solid white;
+      border-radius: 10px;
+      box-shadow: 0 0 20px black;
+    }
+
+    #lightbox:target {
+      display: flex;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">
+      <span>SIEMENS</span> <span>ENERGY</span>
+    </div>
+    <div class="plant-info">
+      <div>Beni Suef Power Plant</div>
+      <div>Electrical Maintenance Department</div>
+    </div>
+  </header>
+
+  <input type="text" id="searchBox" placeholder="Enter KKS code or part of image name...">
+  <div id="gallery"></div>
+  <div class="no-results" id="noResults" style="display: none;">No images found.</div>
+  <div id="lightbox" onclick="this.style.display='none'"><img id="lightbox-img" src=""></div>
+
+  <script>
+    let allImages = [];
+    const gallery = document.getElementById("gallery");
+    const noResults = document.getElementById("noResults");
+    const lightbox = document.getElementById("lightbox");
+    const lightboxImg = document.getElementById("lightbox-img");
+
+    // تحميل الصور تلقائيًا من السيرفر
+    fetch('/images').then(res => res.json()).then(data => {
+      allImages = data;
+    });
+
+    function displayImages(images) {
+      gallery.innerHTML = "";
+      if (images.length === 0) {
+        noResults.style.display = "block";
+        return;
+      }
+      noResults.style.display = "none";
+      images.forEach(name => {
+        const div = document.createElement("div");
+        div.className = "image-item";
+        const img = document.createElement("img");
+        img.src = `img/${name}`;
+        img.alt = name;
+        img.onclick = () => {
+          lightbox.style.display = 'flex';
+          lightboxImg.src = img.src;
+        };
+        div.appendChild(img);
+        gallery.appendChild(div);
+      });
+    }
+
+    document.getElementById("searchBox").addEventListener("input", function() {
+      const query = this.value.toLowerCase().trim();
+      if (query === "") {
+        gallery.innerHTML = "";
+        noResults.style.display = false;
+        return;
+      }
+      const filtered = allImages.filter(name => name.toLowerCase().includes(query));
+      displayImages(filtered);
+    });
+  </script>
+</body>
+</html>
